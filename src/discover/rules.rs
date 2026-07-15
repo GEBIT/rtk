@@ -717,6 +717,15 @@ pub const RULES: &[RtkRule] = &[
         subcmd_status: &[],
     },
     RtkRule {
+        pattern: r"^gmvn\b(?:\s+\S+)*?\s+(compile|test|integration-test|package|install|verify|deploy)\b",
+        rtk_cmd: "rtk gmvn",
+        rewrite_prefixes: &["gmvn"],
+        category: "Build",
+        savings_pct: 82.0,
+        subcmd_savings: &[],
+        subcmd_status: &[],
+    },
+    RtkRule {
         pattern: r"^ping\b",
         rtk_cmd: "rtk ping",
         rewrite_prefixes: &["ping"],
