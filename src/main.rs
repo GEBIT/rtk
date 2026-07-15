@@ -816,6 +816,14 @@ enum Commands {
         args: Vec<String>,
     },
 
+    /// GEBIT Maven wrapper (gmvn) with compact output — same filtering as mvn
+    #[command(name = "gmvn")]
+    Gmvn {
+        /// Maven goals and arguments (e.g., clean install, -DskipTests test, -X)
+        #[arg(trailing_var_arg = true, allow_hyphen_values = true)]
+        args: Vec<String>,
+    },
+
     /// Show hook rewrite audit metrics (requires RTK_HOOK_AUDIT=1)
     #[command(name = "hook-audit")]
     HookAudit {
@@ -2366,6 +2374,8 @@ fn run_cli() -> Result<i32> {
 
         Commands::Mvn { args } => mvn_cmd::run(&args, cli.verbose)?,
 
+        Commands::Gmvn { args } => mvn_cmd::run_as(&args, cli.verbose, "gmvn")?,
+
         Commands::HookAudit { since } => {
             hooks::hook_audit_cmd::run(since, cli.verbose)?;
             0
@@ -3097,6 +3107,7 @@ mod tests {
             "golangci-lint",
             "gradlew",
             "mvn",
+            "gmvn",
             "php",
             "phpunit",
             "phpstan",

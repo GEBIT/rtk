@@ -901,20 +901,49 @@ fn new_mvn_command(args: &[String]) -> Command {
     cmd
 }
 
-// ── Entry point ─────────────────────────────────────────────────────────────
+/// Build a [`Command`] for an arbitrary Maven-compatible binary (e.g. `gmvn`).
+/// Unlike [`new_mvn_command`] this does **not** check for mvnw wrappers because
+/// the caller is already a wrapper itself.
+fn new_cmd_for(args: &[String], binary: &str) -> Command {
+    let mut cmd = resolved_command(binary);
+    cmd.args(args);
+    cmd
+}
+
+// ── Entry points ─────────────────────────────────────────────────────────────
 
 pub fn run(args: &[String], verbose: u8) -> Result<i32> {
+    run_as(args, verbose, mvn_binary())
+}
+
+/// Run the Maven filter using `binary` as the underlying executable.
+///
+/// This allows alternative Maven wrappers (e.g. `gmvn`) to reuse the same
+/// filtering logic. Tee labels are prefixed with the binary name so that
+/// per-binary recovery files stay separate in the tee directory.
+pub fn run_as(args: &[String], verbose: u8, binary: &str) -> Result<i32> {
     // Verbose flags bypass filtering — user wants full output.
     if args
         .iter()
         .any(|a| matches!(a.as_str(), "-X" | "--debug" | "-e" | "--errors"))
     {
         let osargs: Vec<OsString> = args.iter().map(OsString::from).collect();
-        return runner::run_passthrough(mvn_binary(), &osargs, verbose);
+        return runner::run_passthrough(binary, &osargs, verbose);
     }
 
-    let tool = mvn_binary();
     let args_display = args.join(" ");
+
+    // Choose between mvnw-aware command builder (mvn) and direct binary (gmvn).
+    let build_cmd = |a: &[String]| -> Command {
+        if binary == "mvn" {
+            new_mvn_command(a)
+        } else {
+            new_cmd_for(a, binary)
+        }
+    };
+
+    // Sanitize the binary name for use in tee labels (e.g. "gmvn" → "gmvn").
+    let label_prefix = binary.replace(['/', '.', '\\'], "_");
 
     // Quiet mode: standard footer guard can't fire (no `BUILD SUCCESS` line
     // under `-q`). Route to `filter_quiet` for any non-passthrough phase so
@@ -923,44 +952,54 @@ pub fn run(args: &[String], verbose: u8) -> Result<i32> {
         let phase = detect_phase(args);
         if matches!(phase, MvnPhase::Passthrough) {
             let osargs: Vec<OsString> = args.iter().map(OsString::from).collect();
-            return runner::run_passthrough(tool, &osargs, verbose);
+            return runner::run_passthrough(binary, &osargs, verbose);
         }
+        let tee_label = format!("{label_prefix}_quiet");
         return runner::run_filtered(
-            new_mvn_command(args),
-            tool,
+            build_cmd(args),
+            binary,
             &args_display,
             filter_quiet,
-            RunOptions::with_tee("mvn_quiet"),
+            RunOptions::with_tee(&tee_label),
         );
     }
 
     let phase = detect_phase(args);
 
     match phase {
-        MvnPhase::Test => runner::run_filtered(
-            new_mvn_command(args),
-            tool,
-            &args_display,
-            filter_surefire,
-            RunOptions::with_tee("mvn_test"),
-        ),
-        MvnPhase::Compile => runner::run_filtered(
-            new_mvn_command(args),
-            tool,
-            &args_display,
-            filter_compile,
-            RunOptions::with_tee("mvn_compile"),
-        ),
-        MvnPhase::Package => runner::run_filtered(
-            new_mvn_command(args),
-            tool,
-            &args_display,
-            filter_package,
-            RunOptions::with_tee("mvn_package"),
-        ),
+        MvnPhase::Test => {
+            let tee_label = format!("{label_prefix}_test");
+            runner::run_filtered(
+                build_cmd(args),
+                binary,
+                &args_display,
+                filter_surefire,
+                RunOptions::with_tee(&tee_label),
+            )
+        }
+        MvnPhase::Compile => {
+            let tee_label = format!("{label_prefix}_compile");
+            runner::run_filtered(
+                build_cmd(args),
+                binary,
+                &args_display,
+                filter_compile,
+                RunOptions::with_tee(&tee_label),
+            )
+        }
+        MvnPhase::Package => {
+            let tee_label = format!("{label_prefix}_package");
+            runner::run_filtered(
+                build_cmd(args),
+                binary,
+                &args_display,
+                filter_package,
+                RunOptions::with_tee(&tee_label),
+            )
+        }
         MvnPhase::Passthrough => {
             let osargs: Vec<OsString> = args.iter().map(OsString::from).collect();
-            runner::run_passthrough(tool, &osargs, verbose)
+            runner::run_passthrough(binary, &osargs, verbose)
         }
     }
 }
