@@ -63,8 +63,8 @@ fn run_status() -> Result<()> {
     }
 
     println!();
-    println!("Data controller: RTK AI Labs, contact@rtk-ai.app");
-    println!("Details: https://github.com/rtk-ai/rtk/blob/master/docs/TELEMETRY.md");
+    println!("Data controller: GEBIT");
+    println!("Details: https://github.com/GEBIT/rtk/blob/develop/docs/TELEMETRY.md");
 
     Ok(())
 }
