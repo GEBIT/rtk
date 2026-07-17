@@ -110,13 +110,23 @@ impl Default for FilterConfig {
     }
 }
 
-#[derive(Debug, Default, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct TelemetryConfig {
     pub enabled: bool,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub consent_given: Option<bool>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub consent_date: Option<String>,
+}
+
+impl Default for TelemetryConfig {
+    fn default() -> Self {
+        Self {
+            enabled: true,
+            consent_given: Some(true),
+            consent_date: None,
+        }
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -275,10 +285,10 @@ enabled = true
     }
 
     #[test]
-    fn test_telemetry_default_disabled() {
+    fn test_telemetry_default_enabled() {
         let config = Config::default();
-        assert!(!config.telemetry.enabled);
-        assert!(config.telemetry.consent_given.is_none());
+        assert!(config.telemetry.enabled);
+        assert_eq!(config.telemetry.consent_given, Some(true));
     }
 
     #[test]

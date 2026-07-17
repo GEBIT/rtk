@@ -1,11 +1,11 @@
 # Telemetry
 
-RTK collects anonymous, aggregate usage metrics once per day to help improve the product. Telemetry is **disabled by default** and requires explicit consent during `rtk init` or `rtk telemetry enable`.
+RTK collects anonymous, aggregate usage metrics once per day to help improve the product. In this GEBIT distribution, telemetry is **enabled by default** and sent to an **on-premise GEBIT telemetry server**.
 
 ## Data Collector
 
-**Entity**: `RTK AI Labs`
-**Contact**: contact@rtk-ai.app
+**Entity**: `GEBIT (on-premise telemetry service)`
+**Contact**: GEBIT internal platform owner
 
 ## Why we collect telemetry
 
@@ -32,78 +32,78 @@ This data directly drives our roadmap. For example, if telemetry shows that 40% 
 
 ### Identity (anonymous)
 
-| Field | Example | Purpose |
-|-------|---------|---------|
+| Field         | Example                    | Purpose                                                                                                                                                               |
+| ------------- | -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `device_hash` | `a3f8c9...` (64 hex chars) | Count unique installations. SHA-256 of a per-device random salt stored locally (`~/.local/share/rtk/.device_salt`). Not reversible. No hostname or username included. |
 
 ### Environment
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `version` | `0.34.1` | Track adoption of new versions |
-| `os` | `macos` | Know which platforms to support and test |
-| `arch` | `aarch64` | Prioritize ARM vs x86 builds |
+| Field            | Example    | Purpose                                                      |
+| ---------------- | ---------- | ------------------------------------------------------------ |
+| `version`        | `0.34.1`   | Track adoption of new versions                               |
+| `os`             | `macos`    | Know which platforms to support and test                     |
+| `arch`           | `aarch64`  | Prioritize ARM vs x86 builds                                 |
 | `install_method` | `homebrew` | Understand distribution channels (homebrew/cargo/script/nix) |
 
 ### Usage volume
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `commands_24h` | `142` | Daily activity level |
-| `commands_total` | `32888` | Lifetime usage — segment light vs heavy users |
-| `top_commands` | `["git", "cargo", "ls"]` | Most popular tools (names only, max 5) |
-| `tokens_saved_24h` | `450000` | Daily value delivered |
-| `tokens_saved_total` | `96500000` | Lifetime value delivered |
-| `savings_pct` | `72.5` | Overall effectiveness |
+| Field                | Example                  | Purpose                                       |
+| -------------------- | ------------------------ | --------------------------------------------- |
+| `commands_24h`       | `142`                    | Daily activity level                          |
+| `commands_total`     | `32888`                  | Lifetime usage — segment light vs heavy users |
+| `top_commands`       | `["git", "cargo", "ls"]` | Most popular tools (names only, max 5)        |
+| `tokens_saved_24h`   | `450000`                 | Daily value delivered                         |
+| `tokens_saved_total` | `96500000`               | Lifetime value delivered                      |
+| `savings_pct`        | `72.5`                   | Overall effectiveness                         |
 
 ### Quality (filter improvement)
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `passthrough_top` | `["git:15", "npm:8"]` | Top 5 commands with 0% savings — these need filters |
-| `parse_failures_24h` | `3` | Filter fragility — high count means filters are breaking |
-| `low_savings_commands` | `["rtk docker ps:25%"]` | Commands averaging <30% savings — filters to improve |
-| `avg_savings_per_command` | `68.5` | Unweighted average (vs global which is volume-biased) |
+| Field                     | Example                 | Purpose                                                  |
+| ------------------------- | ----------------------- | -------------------------------------------------------- |
+| `passthrough_top`         | `["git:15", "npm:8"]`   | Top 5 commands with 0% savings — these need filters      |
+| `parse_failures_24h`      | `3`                     | Filter fragility — high count means filters are breaking |
+| `low_savings_commands`    | `["rtk docker ps:25%"]` | Commands averaging <30% savings — filters to improve     |
+| `avg_savings_per_command` | `68.5`                  | Unweighted average (vs global which is volume-biased)    |
 
 ### Ecosystem distribution
 
-| Field | Example | Purpose |
-|-------|---------|---------|
+| Field           | Example                              | Purpose                                                   |
+| --------------- | ------------------------------------ | --------------------------------------------------------- |
 | `ecosystem_mix` | `{"git": 45, "cargo": 20, "js": 15}` | Category percentages — where to invest filter development |
 
 ### Retention (engagement)
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `first_seen_days` | `45` | Installation age in days |
-| `active_days_30d` | `22` | Days with at least 1 command in last 30 days — measures stickiness |
+| Field             | Example | Purpose                                                            |
+| ----------------- | ------- | ------------------------------------------------------------------ |
+| `first_seen_days` | `45`    | Installation age in days                                           |
+| `active_days_30d` | `22`    | Days with at least 1 command in last 30 days — measures stickiness |
 
 ### Economics
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `tokens_saved_30d` | `12000000` | 30-day token savings for trend analysis |
-| `estimated_savings_usd_30d` | `36.0` | Estimated dollar value saved (at ~$3/Mtok input pricing, Claude Sonnet) |
+| Field                       | Example    | Purpose                                                                 |
+| --------------------------- | ---------- | ----------------------------------------------------------------------- |
+| `tokens_saved_30d`          | `12000000` | 30-day token savings for trend analysis                                 |
+| `estimated_savings_usd_30d` | `36.0`     | Estimated dollar value saved (at ~$3/Mtok input pricing, Claude Sonnet) |
 
 ### Adoption
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `hook_type` | `claude` | Which AI agent hook is installed (claude/gemini/codex/cursor/none) |
-| `custom_toml_filters` | `3` | Number of user-created TOML filter files — DSL adoption |
+| Field                 | Example  | Purpose                                                            |
+| --------------------- | -------- | ------------------------------------------------------------------ |
+| `hook_type`           | `claude` | Which AI agent hook is installed (claude/gemini/codex/cursor/none) |
+| `custom_toml_filters` | `3`      | Number of user-created TOML filter files — DSL adoption            |
 
 ### Configuration (user maturity)
 
-| Field | Example | Purpose |
-|-------|---------|---------|
-| `has_config_toml` | `true` | Whether user has customized RTK config |
-| `exclude_commands_count` | `2` | Commands excluded from rewriting — high count may indicate frustration |
-| `projects_count` | `5` | Distinct project paths — multi-project = power user |
+| Field                    | Example | Purpose                                                                |
+| ------------------------ | ------- | ---------------------------------------------------------------------- |
+| `has_config_toml`        | `true`  | Whether user has customized RTK config                                 |
+| `exclude_commands_count` | `2`     | Commands excluded from rewriting — high count may indicate frustration |
+| `projects_count`         | `5`     | Distinct project paths — multi-project = power user                    |
 
 ### Feature adoption
 
-| Field | Example | Purpose |
-|-------|---------|---------|
+| Field        | Example                      | Purpose                              |
+| ------------ | ---------------------------- | ------------------------------------ |
 | `meta_usage` | `{"gain": 5, "discover": 2}` | Which RTK features are actually used |
 
 ## What is NOT collected
@@ -118,7 +118,7 @@ This data directly drives our roadmap. For example, if telemetry shows that 40% 
 
 ## Consent
 
-Telemetry requires explicit opt-in consent (GDPR Art. 6, 7). Consent is requested during `rtk init` or via `rtk telemetry enable`. Without consent, no data is sent.
+Telemetry is enabled by default in this build so operational quality metrics can be sent to the on-premise GEBIT telemetry server. You can opt out at any time.
 
 ```bash
 rtk telemetry status     # Check current consent state
@@ -127,10 +127,14 @@ rtk telemetry disable    # Withdraw consent
 rtk telemetry forget     # Withdraw consent + delete local data + request server erasure
 ```
 
-Environment variable override (blocks telemetry regardless of consent):
+Environment variable override (blocks telemetry regardless of config):
 ```bash
 export RTK_TELEMETRY_DISABLED=1
 ```
+
+Notes:
+- `rtk telemetry status` prints that telemetry is enabled by default for the on-premise GEBIT server.
+- If `RTK_TELEMETRY_URL` is not compiled into the binary, no telemetry is sent.
 
 ## Retention Policy
 
@@ -162,6 +166,7 @@ Under the EU General Data Protection Regulation, you have the right to:
 - Data is used exclusively for RTK product improvement
 - No data is sold or shared with third parties
 - Aggregate statistics may be published (e.g. "70% of RTK users are on macOS")
+- In GEBIT builds, `RTK_TELEMETRY_URL` points to an internal on-premise endpoint
 
 ### Server-side Requirements
 
@@ -169,6 +174,8 @@ The telemetry server must implement:
 - `POST /erasure` endpoint accepting `{"device_hash": "...", "action": "erasure"}`, authenticated via `X-RTK-Token`
 - Automatic periodic purge of telemetry records older than 12 months
 - Audit log for erasure requests (GDPR Art. 17(2) accountability) with IP anonymization after 6 months
+
+Detailed implementation requirements are documented in `docs/TELEMETRY_SERVER_SPEC.md`.
 
 ## For contributors
 

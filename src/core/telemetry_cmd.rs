@@ -20,6 +20,7 @@ pub fn run(command: &TelemetrySubcommand) -> Result<()> {
 
 fn run_status() -> Result<()> {
     let config = crate::core::config::Config::load().unwrap_or_default();
+    let telemetry_url = option_env!("RTK_TELEMETRY_URL");
 
     let consent_str = match config.telemetry.consent_given {
         Some(true) => "yes",
@@ -41,8 +42,16 @@ fn run_status() -> Result<()> {
         println!("  consent date:  {}", date);
     }
     println!("  enabled:       {}", enabled_str);
+    println!(
+        "  default:       enabled by default (on-premise GEBIT telemetry server)"
+    );
     if env_override {
         println!("  env override:  RTK_TELEMETRY_DISABLED=1 (blocked)");
+    }
+    if let Some(url) = telemetry_url {
+        println!("  endpoint:      {}", url);
+    } else {
+        println!("  endpoint:      (not configured at build time)");
     }
 
     let salt_path = super::telemetry::salt_file_path();
