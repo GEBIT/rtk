@@ -5,6 +5,7 @@ use crate::core::config;
 use crate::core::tracking;
 use crate::hooks::constants::CLAUDE_DIR;
 use crate::hooks::init::resolve_claude_dir;
+use anyhow::{bail, Context, Result};
 use sha2::{Digest, Sha256};
 use std::fmt::Write as FmtWrite;
 use std::io::Write as IoWrite;
@@ -68,8 +69,31 @@ pub fn maybe_ping() {
     });
 }
 
-fn send_ping() -> Result<(), Box<dyn std::error::Error>> {
-    let url = TELEMETRY_URL.ok_or("no telemetry URL")?;
+/// Upload telemetry immediately, without applying the automatic ping interval.
+pub fn upload_now() -> Result<()> {
+    if TELEMETRY_URL.is_none() {
+        bail!("no telemetry endpoint configured at build time");
+    }
+
+    if std::env::var("RTK_TELEMETRY_DISABLED").unwrap_or_default() == "1" {
+        bail!("telemetry is disabled by RTK_TELEMETRY_DISABLED=1");
+    }
+
+    let cfg = config::Config::load().context("failed to load telemetry configuration")?;
+    if cfg.telemetry.consent_given != Some(true) {
+        bail!("telemetry upload requires explicit consent");
+    }
+    if !cfg.telemetry.enabled {
+        bail!("telemetry is disabled in the configuration");
+    }
+
+    send_ping().context("failed to upload telemetry")?;
+    touch_marker(&telemetry_marker_path());
+    Ok(())
+}
+
+fn send_ping() -> Result<()> {
+    let url = TELEMETRY_URL.ok_or_else(|| anyhow::anyhow!("no telemetry URL"))?;
     let device_hash = generate_device_hash();
     let version = env!("CARGO_PKG_VERSION").to_string();
     let os = std::env::consts::OS.to_string();

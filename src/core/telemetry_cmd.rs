@@ -7,6 +7,8 @@ pub enum TelemetrySubcommand {
     Enable,
     Disable,
     Forget,
+    /// Upload telemetry data immediately when telemetry is enabled
+    Upload,
 }
 
 pub fn run(command: &TelemetrySubcommand) -> Result<()> {
@@ -15,6 +17,7 @@ pub fn run(command: &TelemetrySubcommand) -> Result<()> {
         TelemetrySubcommand::Enable => run_enable(),
         TelemetrySubcommand::Disable => run_disable(),
         TelemetrySubcommand::Forget => run_forget(),
+        TelemetrySubcommand::Upload => run_upload(),
     }
 }
 
@@ -42,9 +45,7 @@ fn run_status() -> Result<()> {
         println!("  consent date:  {}", date);
     }
     println!("  enabled:       {}", enabled_str);
-    println!(
-        "  default:       enabled by default (on-premise GEBIT telemetry server)"
-    );
+    println!("  default:       enabled by default (on-premise GEBIT telemetry server)");
     if env_override {
         println!("  env override:  RTK_TELEMETRY_DISABLED=1 (blocked)");
     }
@@ -112,6 +113,15 @@ fn run_enable() -> Result<()> {
 fn run_disable() -> Result<()> {
     crate::hooks::init::save_telemetry_consent(false)?;
     println!("Telemetry disabled.");
+    Ok(())
+}
+
+fn run_upload() -> Result<()> {
+    super::telemetry::upload_now().context("Telemetry upload failed")?;
+    println!(
+        "Telemetry uploaded to {} successfully!",
+        option_env!("RTK_TELEMETRY_URL").unwrap_or("(not configured)")
+    );
     Ok(())
 }
 
